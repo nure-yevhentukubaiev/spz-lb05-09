@@ -1,3 +1,11 @@
+# Visual Studio artifacts
+.vs
+
+# Build artifacts
+x64
+Debug
+Release
+
 # Prerequisites
 *.d
 
