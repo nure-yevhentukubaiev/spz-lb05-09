@@ -129,11 +129,13 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SCMan.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="testdrv.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SCMan.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="testdrv.rc" />
