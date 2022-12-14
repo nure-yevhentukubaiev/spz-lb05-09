@@ -34,9 +34,9 @@ static BOOL AppendLogEntry(LPCTSTR lpszLogEntry)
 static BOOL PrintLastError(VOID)
 {
 	DWORD dwErr = GetLastError();
-	
+
 	LPTSTR lpszErrorDesc = NULL;
-	
+
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER
 		| FORMAT_MESSAGE_FROM_SYSTEM
@@ -45,9 +45,9 @@ static BOOL PrintLastError(VOID)
 		0, (LPTSTR)&lpszErrorDesc, 0,
 		NULL
 	);
-	
+
 	AppendLogEntry(lpszErrorDesc);
-	
+
 	LocalFree(lpszErrorDesc);
 	return TRUE;
 }
@@ -77,8 +77,9 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			scman.AddDriver();
 			PrintLastError();
 		}
-			break;
+		break;
 		case IDC_REMOVE_DRIVER:
+			GetDlgItemText(hDlg, IDC_EDIT_SERVICENAME, scman.lpszServiceName, CCHBUF_MEDIUM);
 			AppendLogEntry(_T("RemoveDriver: "));
 			scman.RemoveDriver();
 			PrintLastError();
@@ -113,15 +114,16 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			ofn.lpstrTitle = _T("Create file...");
 			ofn.lpstrFile = scman.lpszDriverPath;
 			ofn.nMaxFile = CCHBUF_BIG;
-			ofn.Flags = 
+			ofn.Flags =
 				OFN_FILEMUSTEXIST
 				| OFN_READONLY
 				| OFN_PATHMUSTEXIST;
-			ofn.lpstrFilter = _T("All Files\0*.*\0Driver files (.sys)\0.SYS\0\0");
+			ofn.lpstrFilter = _T("All Files\0*.*\0Driver files (.sys)\0*.SYS\0\0");
 
 			if (GetOpenFileName(&ofn))
 				SetDlgItemText(hDlg, IDC_EDIT_FILEPATH, ofn.lpstrFile);
 		}
+		break;
 		case IDC_READ:
 		{
 			DWORD dwActualSize = 0;
@@ -130,7 +132,7 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				LPTSTR lpszLogEntry =
 					(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(LPTSTR) * CCHBUF_SMALL);
 				LPSTR lpBufCpy = NULL;
-				(LPSTR)CopyMemory(lpBufCpy, lpBuf, dwActualSize+1);
+				(LPSTR)CopyMemory(lpBufCpy, lpBuf, dwActualSize + 1);
 
 				_stprintf_s(
 					lpszLogEntry, CCHBUF_SMALL,
@@ -143,7 +145,7 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				PrintLastError();
 			}
 		}
-			break;
+		break;
 		case IDC_WRITE:
 			AppendLogEntry(_T("Write: "));
 			//scman.Write(lpBuf, 16);

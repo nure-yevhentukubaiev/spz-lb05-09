@@ -10,7 +10,11 @@ SCMan::SCMan(VOID)
 		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(LPTSTR) * CCHBUF_BIG);
 	this->lpszDriverPath =
 		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(LPTSTR) * CCHBUF_BIG);
-	this->hScMan = OpenSCManager(NULL, SERVICES_ACTIVE_DATABASE, 0);
+	this->hScMan = OpenSCManager(
+		NULL,
+		SERVICES_ACTIVE_DATABASE,
+		SC_MANAGER_CREATE_SERVICE
+	);
 }
 
 SCMan::~SCMan(VOID)
@@ -28,7 +32,8 @@ DWORD SCMan::AddDriver(VOID)
 	this->hSvc = CreateService(
 		this->hScMan,
 		this->lpszServiceName, this->lpszServiceName,
-		0, 0, SERVICE_DEMAND_START, 0,
+		SERVICE_ALL_ACCESS,
+		SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, 0,
 		this->lpszDriverPath,
 		NULL, 0,
 		NULL,
@@ -37,18 +42,43 @@ DWORD SCMan::AddDriver(VOID)
 	return GetLastError();
 }
 
-BOOL SCMan::RemoveDriver(VOID) const
+BOOL SCMan::TryOpenService(VOID)
 {
-	return DeleteService(this->hSvc);
+	SetLastError(ERROR_SUCCESS);
+	this->hSvc = (this->hSvc)
+		? this->hSvc
+		: OpenService(
+			this->hScMan,
+			this->lpszServiceName,
+			SERVICE_ALL_ACCESS
+		);
+	if (GetLastError()) {
+		return FALSE;
+	}
+	return TRUE;
 }
 
-BOOL SCMan::StartDriver(VOID) const
+BOOL SCMan::RemoveDriver(VOID)
 {
+	if (!this->TryOpenService())
+		return FALSE;
+	DeleteService(this->hSvc);
+	CloseServiceHandle(this->hSvc);
+	this->hSvc = NULL;
+	return TRUE;
+}
+
+BOOL SCMan::StartDriver(VOID)
+{
+	if (!this->TryOpenService())
+		return FALSE;
 	return StartService(this->hSvc, 0, NULL);
 }
 
-BOOL SCMan::StopDriver(VOID) const
+BOOL SCMan::StopDriver(VOID)
 {
+	if (!this->TryOpenService())
+		return FALSE;
 	return ControlService(
 		this->hSvc,
 		SERVICE_CONTROL_STOP,

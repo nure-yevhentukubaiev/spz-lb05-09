@@ -14,9 +14,10 @@ public:
 	SCMan(VOID);
 	~SCMan(VOID);
 	DWORD AddDriver(VOID);
-	BOOL RemoveDriver(VOID) const;
-	BOOL StartDriver(VOID) const;
-	BOOL StopDriver(VOID) const;
+	BOOL TryOpenService(VOID);
+	BOOL RemoveDriver(VOID);
+	BOOL StartDriver(VOID);
+	BOOL StopDriver(VOID);
 	DWORD OpenDevice(VOID);
 	BOOL CloseDevice(VOID) const;
 	BOOL Read(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const;
