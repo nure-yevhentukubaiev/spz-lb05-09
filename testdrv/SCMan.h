@@ -19,4 +19,6 @@ public:
 	BOOL StopDriver(VOID) const;
 	DWORD OpenDevice(VOID);
 	BOOL CloseDevice(VOID) const;
+	BOOL Read(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const;
+	BOOL Write(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const;
 };
