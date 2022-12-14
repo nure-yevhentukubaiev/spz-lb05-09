@@ -10,3 +10,4 @@
 #include <memory.h>
 #include <tchar.h>
 #include <commdlg.h>
+#include <CommCtrl.h>

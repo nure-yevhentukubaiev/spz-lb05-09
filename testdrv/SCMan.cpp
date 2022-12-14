@@ -71,3 +71,21 @@ BOOL SCMan::CloseDevice(VOID) const
 {
 	return CloseHandle(this->hDevice);
 }
+
+BOOL SCMan::Read(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const
+{
+	return ReadFile(
+		this->hDevice, lpBuf,
+		ulSize, pulActualSize,
+		NULL
+	);
+}
+
+BOOL SCMan::Write(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const
+{
+	return WriteFile(
+		this->hDevice, lpBuf,
+		ulSize, pulActualSize,
+		NULL
+	);
+}

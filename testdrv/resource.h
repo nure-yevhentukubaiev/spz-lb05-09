@@ -23,6 +23,9 @@
 #define IDC_EDIT_SERVICENAME            1008
 #define IDC_STATIC2                     1009
 #define IDC_EDIT_SYMBOLICLINKNAME       1010
+#define IDC_READ                        1011
+#define IDC_READ2                       1012
+#define IDC_WRITE                       1012
 #define IDC_FILEPICKER                  1017
 #define IDC_STATIC                      -1
 
