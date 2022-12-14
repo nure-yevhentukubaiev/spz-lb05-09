@@ -10,7 +10,7 @@ struct MyDevice {
 	ULONG uFlags;
 };
 
-MyDevice aMyDevices[3];
+MyDevice aMyDevices[3] = {0};
 
 typedef struct _DEVICE_EXTENSION {
 	unsigned char Image[DRV04_BUFFER_LENGTH];
@@ -89,7 +89,7 @@ DispatchDriver(
 			pBuf = MmGetSystemAddressForMdl(pIrp->MdlAddress);
 			break;
 		case 0:
-			pBuf = pIrp->AssociatedIrp.SystemBuffer;
+			pBuf = pIrp->UserBuffer;
 			break;
 		default:
 			break;
@@ -110,8 +110,8 @@ DispatchDriver(
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
 	KdPrint((
-		"Func %s returns %lX, information %lX\n",
-		__FUNCTION__, pIrp->IoStatus.Status, pIrp->IoStatus.Information
+		"Func %s/irp_mj_%d returns %lX, information %lX\n",
+		__FUNCTION__, pIoStack->MajorFunction, pIrp->IoStatus.Status, pIrp->IoStatus.Information
 	));
 	return pIrp->IoStatus.Status;
 }
@@ -174,17 +174,9 @@ DriverEntry(
 		);
 		KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoCreateDevice", nt));
 		if (!NT_SUCCESS(nt)) {
+			OnDrvUnload(pDriverObject);
 			goto fail;
 		}
-	}
-
-	/*nt = IoCreateSymbolicLink(
-		&uniszSymbolicLink, &uniszDevice
-	);*/
-	KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoCreateSymbolicLink", nt));
-	if (!NT_SUCCESS(nt)) {
-		IoDeleteDevice(pDriverObject->DeviceObject);
-		goto fail;
 	}
 
 	for (ULONG i = 0; i < ARRAYSIZE(iIrpCodes); ++i) {
