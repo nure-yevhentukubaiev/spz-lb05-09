@@ -86,19 +86,23 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_START_DRIVER:
 			AppendLogEntry(_T("StartDriver: "));
 			scman.StartDriver();
+			PrintLastError();
 			break;
 		case IDC_STOP_DRIVER:
 			AppendLogEntry(_T("StopDriver: "));
 			scman.StopDriver();
+			PrintLastError();
 			break;
 		case IDC_OPEN_DEVICE:
 			GetDlgItemText(hDlg, IDC_EDIT_SERVICENAME, scman.lpszSymlinkName, CCHBUF_MEDIUM);
 			AppendLogEntry(_T("OpenDevice: "));
 			scman.OpenDevice();
+			PrintLastError();
 			break;
 		case IDC_CLOSE_DEVICE:
 			AppendLogEntry(_T("CloseDevice: "));
 			scman.CloseDevice();
+			PrintLastError();
 			break;
 		case IDC_FILEPICKER:
 		{
@@ -161,6 +165,7 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			_T("Courier New")
 		);
 		SendDlgItemMessage(hDlg, IDC_LOGVIEW, WM_SETFONT, (WPARAM)hFontLogView, TRUE);
+		AppendLogEntry(_T("Begin of Log View"));
 		return TRUE;
 		break;
 	}
