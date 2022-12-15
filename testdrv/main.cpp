@@ -2,13 +2,19 @@
 #include "testdrv.h"
 #include "SCMan.h"
 
+#define SHOW_BYTES 4
 
 static LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL AppendLogEntry(LPCTSTR lpszLogEntry);
 static BOOL PrintLastError(VOID);
 
 SCMan scman;
-LPVOID lpBuf;
+CHAR lpBuf[16] = {
+	'0', '1', '2', '3',
+	'4', '5', '6', '7',
+	'8', '9', 'A', 'B',
+	'C', 'D', 'E', 'F'
+};
 HWND g_hDlg;
 HFONT hFontLogView;
 
@@ -34,8 +40,17 @@ static BOOL AppendLogEntry(LPCTSTR lpszLogEntry)
 static BOOL PrintLastError(VOID)
 {
 	DWORD dwErr = GetLastError();
-
 	LPTSTR lpszErrorDesc = NULL;
+	
+	if (dwErr) {
+		lpszErrorDesc = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, CCHBUF_SMALL);
+		_stprintf_s(
+			lpszErrorDesc, CCHBUF_SMALL,
+			_T("ERROR %X: "), dwErr
+		);
+		AppendLogEntry(lpszErrorDesc);
+		LocalFree(lpszErrorDesc);
+	}
 
 	FormatMessage(
 		FORMAT_MESSAGE_ALLOCATE_BUFFER
@@ -80,27 +95,31 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		break;
 		case IDC_REMOVE_DRIVER:
 			GetDlgItemText(hDlg, IDC_EDIT_SERVICENAME, scman.lpszServiceName, CCHBUF_MEDIUM);
+			GetDlgItemText(hDlg, IDC_EDIT_FILEPATH, scman.lpszDriverPath, CCHBUF_BIG);
 			AppendLogEntry(_T("RemoveDriver: "));
 			scman.RemoveDriver();
 			PrintLastError();
 			break;
 		case IDC_START_DRIVER:
+			GetDlgItemText(hDlg, IDC_EDIT_SERVICENAME, scman.lpszServiceName, CCHBUF_MEDIUM);
 			AppendLogEntry(_T("StartDriver: "));
 			scman.StartDriver();
 			PrintLastError();
 			break;
 		case IDC_STOP_DRIVER:
+			GetDlgItemText(hDlg, IDC_EDIT_SERVICENAME, scman.lpszServiceName, CCHBUF_MEDIUM);
 			AppendLogEntry(_T("StopDriver: "));
 			scman.StopDriver();
 			PrintLastError();
 			break;
 		case IDC_OPEN_DEVICE:
-			GetDlgItemText(hDlg, IDC_EDIT_SERVICENAME, scman.lpszSymlinkName, CCHBUF_MEDIUM);
+			GetDlgItemText(hDlg, IDC_EDIT_SYMBOLICLINKNAME, scman.lpszSymlinkName, CCHBUF_MEDIUM);
 			AppendLogEntry(_T("OpenDevice: "));
 			scman.OpenDevice();
 			PrintLastError();
 			break;
 		case IDC_CLOSE_DEVICE:
+			GetDlgItemText(hDlg, IDC_EDIT_SYMBOLICLINKNAME, scman.lpszSymlinkName, CCHBUF_MEDIUM);
 			AppendLogEntry(_T("CloseDevice: "));
 			scman.CloseDevice();
 			PrintLastError();
@@ -128,27 +147,45 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			DWORD dwActualSize = 0;
 			AppendLogEntry(_T("Read: "));
-			if (scman.Read(lpBuf, 8, &dwActualSize)) {
-				LPTSTR lpszLogEntry =
-					(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(LPTSTR) * CCHBUF_SMALL);
-				LPSTR lpBufCpy = NULL;
-				(LPSTR)CopyMemory(lpBufCpy, lpBuf, dwActualSize + 1);
-
-				_stprintf_s(
-					lpszLogEntry, CCHBUF_SMALL,
-					_T("%lX bytes read: %hs\r\n"),
-					lstrlenA(lpBufCpy), lpBufCpy
-				);
-				AppendLogEntry(lpszLogEntry);
-				LocalFree(lpszLogEntry);
-			} else {
+			if (!scman.Read(lpBuf, 8, &dwActualSize)) {
 				PrintLastError();
+				break;
 			}
+			LPTSTR lpszLogEntry =
+				(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
+			LPSTR lpBufCpy = (LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (dwActualSize + 1));
+			CopyMemory(lpBufCpy, lpBuf, dwActualSize);
+			lpBufCpy[dwActualSize] = '\0';
+			_stprintf_s(
+				lpszLogEntry, CCHBUF_SMALL,
+				_T("%d bytes read, first %d bytes: %hs\r\n"),
+				dwActualSize, min(dwActualSize, SHOW_BYTES), lpBufCpy
+			);
+			AppendLogEntry(lpszLogEntry);
+			LocalFree(lpszLogEntry);
+			LocalFree(lpBufCpy);
 		}
 		break;
 		case IDC_WRITE:
+			DWORD dwActualSize = 0;
 			AppendLogEntry(_T("Write: "));
-			//scman.Write(lpBuf, 16);
+			if (!scman.Write(lpBuf, 16, &dwActualSize)) {
+				PrintLastError();
+				break;
+			}
+			LPTSTR lpszLogEntry =
+				(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
+			LPSTR lpBufCpy = (LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (dwActualSize + 1));
+			CopyMemory(lpBufCpy, lpBuf, dwActualSize);
+			lpBufCpy[dwActualSize] = '\0';
+			_stprintf_s(
+				lpszLogEntry, CCHBUF_SMALL,
+				_T("%d bytes written, first %d bytes: %hs\r\n"),
+				dwActualSize, min(dwActualSize, SHOW_BYTES), lpBufCpy
+			);
+			AppendLogEntry(lpszLogEntry);
+			LocalFree(lpszLogEntry);
+			LocalFree(lpBufCpy);
 			break;
 		}
 		break;

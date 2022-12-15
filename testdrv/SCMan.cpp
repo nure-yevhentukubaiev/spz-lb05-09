@@ -13,7 +13,7 @@ SCMan::SCMan(VOID)
 	this->hScMan = OpenSCManager(
 		NULL,
 		SERVICES_ACTIVE_DATABASE,
-		SC_MANAGER_CREATE_SERVICE
+		SC_MANAGER_ALL_ACCESS
 	);
 }
 
@@ -33,7 +33,7 @@ DWORD SCMan::AddDriver(VOID)
 		this->hScMan,
 		this->lpszServiceName, this->lpszServiceName,
 		SERVICE_ALL_ACCESS,
-		SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, 0,
+		SERVICE_KERNEL_DRIVER, SERVICE_DEMAND_START, SERVICE_ERROR_NORMAL,
 		this->lpszDriverPath,
 		NULL, 0,
 		NULL,
@@ -79,18 +79,23 @@ BOOL SCMan::StopDriver(VOID)
 {
 	if (!this->TryOpenService())
 		return FALSE;
-	return ControlService(
+	SERVICE_STATUS svcstat;
+	BOOL bRet = ControlService(
 		this->hSvc,
 		SERVICE_CONTROL_STOP,
-		NULL
+		&svcstat
 	);
+
+	return bRet;
 }
 
 DWORD SCMan::OpenDevice(VOID)
 {
 	this->hDevice = CreateFile(
 		this->lpszSymlinkName,
-		0, 0, 0, CREATE_NEW,
+		GENERIC_ALL,
+		FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		NULL, OPEN_EXISTING,
 		0,
 		NULL
 	);
