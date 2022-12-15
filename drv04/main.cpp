@@ -23,11 +23,10 @@ OnDrvUnload(
 
 NTSTATUS
 DispatchDriver(
-	_Inout_ PDEVICE_OBJECT pDeviceObject,
-	_Inout_ PIRP pIrp
+	PDEVICE_OBJECT pDeviceObject,
+	PIRP pIrp
 );
 
-_Use_decl_annotations_
 NTSTATUS
 DispatchDriver(
 	PDEVICE_OBJECT pDeviceObject,
@@ -56,7 +55,10 @@ DispatchDriver(
 		break;
 	case IRP_MJ_READ:
 	{
-		ULONG uBufActualLength = pIoStack->Parameters.Read.Length;
+		ULONG uBufActualLength = min(
+			DRV04_BUFFER_LENGTH,
+			pIoStack->Parameters.Write.Length
+		);
 		switch (uFlags) {
 		case DO_BUFFERED_IO:
 			pBuf = pIrp->AssociatedIrp.SystemBuffer;
@@ -72,15 +74,17 @@ DispatchDriver(
 		}
 		RtlMoveMemory(
 			pBuf, pDeviceExtension->Image,
-			min(DRV04_BUFFER_LENGTH, uBufActualLength)
+			uBufActualLength
 		);
-		pIrp->IoStatus.Information =
-			min(DRV04_BUFFER_LENGTH, uBufActualLength);
+		pIrp->IoStatus.Information = uBufActualLength;
 	}
 		break;
 	case IRP_MJ_WRITE:
 	{
-		ULONG uBufActualLength = pIoStack->Parameters.Write.Length;
+		ULONG uBufActualLength = min(
+			DRV04_BUFFER_LENGTH,
+			pIoStack->Parameters.Read.Length
+		);
 		switch (uFlags) {
 		case DO_BUFFERED_IO:
 			pBuf = pIrp->AssociatedIrp.SystemBuffer;
@@ -96,10 +100,10 @@ DispatchDriver(
 		}
 		RtlMoveMemory(
 			pDeviceExtension->Image, pBuf,
-			min(DRV04_BUFFER_LENGTH, uBufActualLength)
+			uBufActualLength
 		);
 		pIrp->IoStatus.Information =
-			min(DRV04_BUFFER_LENGTH, uBufActualLength);
+			uBufActualLength;
 	}
 		break;
 	default:
@@ -122,6 +126,13 @@ OnDrvUnload(
 )
 {
 	KdPrint(("Func %s\n", __FUNCTION__));
+
+	for (ULONG i = 0; i < ARRAYSIZE(aMyDevices); ++i) {
+		if (aMyDevices[i].uniszSymlink.Length != 0) {
+			NTSTATUS nt = IoDeleteSymbolicLink(&aMyDevices[i].uniszSymlink);
+			KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoDeleteSymbolicLink", nt));
+		}
+	}
 
 	for (
 		PDEVICE_OBJECT pDeviceObject = pDriverObject->DeviceObject;
@@ -157,11 +168,14 @@ DriverEntry(
 	aMyDevices[0].pszDevice = L"\\Device\\drv04-bufferio";
 	aMyDevices[1].pszDevice = L"\\Device\\drv04-directio";
 	aMyDevices[2].pszDevice = L"\\Device\\drv04-neitherio";
+	aMyDevices[0].pszSymlink = L"\\DosDevices\\drv04-bufferio-symlink";
+	aMyDevices[1].pszSymlink = L"\\DosDevices\\drv04-directio-symlink";
+	aMyDevices[2].pszSymlink = L"\\DosDevices\\drv04-neitherio-symlink";
 	aMyDevices[0].uFlags = DO_BUFFERED_IO;
 	aMyDevices[1].uFlags = DO_DIRECT_IO;
 	aMyDevices[2].uFlags = 0;
 
-	for (ULONG i = 0; i <= ARRAYSIZE(aMyDevices); ++i) {
+	for (ULONG i = 0; i < ARRAYSIZE(aMyDevices); ++i) {
 		RtlInitUnicodeString(
 			&aMyDevices[i].uniszDevice,
 			aMyDevices[i].pszDevice
@@ -169,7 +183,7 @@ DriverEntry(
 		nt = IoCreateDevice(
 			pDriverObject,
 			sizeof(DEVICE_EXTENSION), &aMyDevices[i].uniszDevice,
-			69420+i, aMyDevices[i].uFlags, FALSE,
+			42069+i, aMyDevices[i].uFlags, FALSE,
 			&aMyDevices[i].pDeviceObject
 		);
 		KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoCreateDevice", nt));
@@ -177,8 +191,22 @@ DriverEntry(
 			OnDrvUnload(pDriverObject);
 			goto fail;
 		}
+		RtlInitUnicodeString(
+			&aMyDevices[i].uniszSymlink,
+			aMyDevices[i].pszSymlink
+		);
+		nt = IoCreateSymbolicLink(
+			&aMyDevices[i].uniszSymlink,
+			&aMyDevices[i].uniszDevice
+		);
+		KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoCreateSymbolicLink", nt));
+		if (!NT_SUCCESS(nt)) {
+			OnDrvUnload(pDriverObject);
+			goto fail;
+		}
 	}
 
+	pDriverObject->DriverUnload = OnDrvUnload;
 	for (ULONG i = 0; i < ARRAYSIZE(iIrpCodes); ++i) {
 		pDriverObject->MajorFunction[iIrpCodes[i]] = DispatchDriver;
 	}
