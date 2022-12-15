@@ -2,19 +2,15 @@
 #include "testdrv.h"
 #include "SCMan.h"
 
-#define SHOW_BYTES 4
+#define TESTDRV_BYTES_TO_READ 8U
+#define TESTDRV_BYTES_TO_WRITE 16U
+#define SHOW_BYTES 4U
 
 static LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 static BOOL AppendLogEntry(LPCTSTR lpszLogEntry);
 static BOOL PrintLastError(VOID);
 
 SCMan scman;
-CHAR lpBuf[16] = {
-	'0', '1', '2', '3',
-	'4', '5', '6', '7',
-	'8', '9', 'A', 'B',
-	'C', 'D', 'E', 'F'
-};
 HWND g_hDlg;
 HFONT hFontLogView;
 
@@ -146,46 +142,51 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		case IDC_READ:
 		{
 			DWORD dwActualSize = 0;
+			LPSTR lpBuf =
+				(LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (TESTDRV_BYTES_TO_READ + 1));
 			AppendLogEntry(_T("Read: "));
-			if (!scman.Read(lpBuf, 8, &dwActualSize)) {
+			if (!scman.Read(lpBuf, TESTDRV_BYTES_TO_READ, &dwActualSize)) {
 				PrintLastError();
 				break;
 			}
 			LPTSTR lpszLogEntry =
 				(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
-			LPSTR lpBufCpy = (LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (dwActualSize + 1));
-			CopyMemory(lpBufCpy, lpBuf, dwActualSize);
-			lpBufCpy[dwActualSize] = '\0';
+			
+			DWORD dwBytesToShow = min(dwActualSize, SHOW_BYTES);
+			lpBuf[dwBytesToShow] = '\0';
 			_stprintf_s(
 				lpszLogEntry, CCHBUF_SMALL,
 				_T("%d bytes read, first %d bytes: %hs\r\n"),
-				dwActualSize, min(dwActualSize, SHOW_BYTES), lpBufCpy
+				dwActualSize, dwBytesToShow, lpBuf
 			);
 			AppendLogEntry(lpszLogEntry);
 			LocalFree(lpszLogEntry);
-			LocalFree(lpBufCpy);
+			LocalFree(lpBuf);
 		}
 		break;
 		case IDC_WRITE:
 			DWORD dwActualSize = 0;
+			LPSTR lpBuf =
+				(LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (TESTDRV_BYTES_TO_WRITE + 1));
+			lstrcpyA(lpBuf, "0123456789ABCDEF");
 			AppendLogEntry(_T("Write: "));
-			if (!scman.Write(lpBuf, 16, &dwActualSize)) {
+			if (!scman.Write(lpBuf, TESTDRV_BYTES_TO_WRITE, &dwActualSize)) {
 				PrintLastError();
 				break;
 			}
 			LPTSTR lpszLogEntry =
 				(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
-			LPSTR lpBufCpy = (LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (dwActualSize + 1));
-			CopyMemory(lpBufCpy, lpBuf, dwActualSize);
-			lpBufCpy[dwActualSize] = '\0';
+
+			DWORD dwBytesToShow = min(dwActualSize, SHOW_BYTES);
+			lpBuf[dwBytesToShow] = '\0';
 			_stprintf_s(
 				lpszLogEntry, CCHBUF_SMALL,
-				_T("%d bytes written, first %d bytes: %hs\r\n"),
-				dwActualSize, min(dwActualSize, SHOW_BYTES), lpBufCpy
+				_T("%d bytes read, first %d bytes: %hs\r\n"),
+				dwActualSize, dwBytesToShow, lpBuf
 			);
 			AppendLogEntry(lpszLogEntry);
 			LocalFree(lpszLogEntry);
-			LocalFree(lpBufCpy);
+			LocalFree(lpBuf);
 			break;
 		}
 		break;

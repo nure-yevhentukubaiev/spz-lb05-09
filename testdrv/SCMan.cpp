@@ -5,11 +5,11 @@
 SCMan::SCMan(VOID)
 {
 	this->lpszServiceName =
-		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(LPTSTR) * CCHBUF_MEDIUM);
+		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_MEDIUM);
 	this->lpszSymlinkName =
-		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(LPTSTR) * CCHBUF_BIG);
+		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_BIG);
 	this->lpszDriverPath =
-		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(LPTSTR) * CCHBUF_BIG);
+		(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_BIG);
 	this->hScMan = OpenSCManager(
 		NULL,
 		SERVICES_ACTIVE_DATABASE,
