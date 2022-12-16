@@ -22,7 +22,7 @@ static BOOL AppendLogEntry(LPCTSTR lpszLogEntry)
 
 	lpszLog = (LPTSTR)LocalAlloc(
 		LMEM_ZEROINIT,
-		sizeof(LPTSTR) * (iLogLength + lstrlen(lpszLogEntry))
+		sizeof(TCHAR) * (iLogLength + lstrlen(lpszLogEntry))
 	);
 	GetWindowText(hLogView, lpszLog, iLogLength);
 	lstrcat(lpszLog, lpszLogEntry);
@@ -39,7 +39,7 @@ static BOOL PrintLastError(VOID)
 	LPTSTR lpszErrorDesc = NULL;
 	
 	if (dwErr) {
-		lpszErrorDesc = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, CCHBUF_SMALL);
+		lpszErrorDesc = (LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
 		_stprintf_s(
 			lpszErrorDesc, CCHBUF_SMALL,
 			_T("ERROR %X: "), dwErr
