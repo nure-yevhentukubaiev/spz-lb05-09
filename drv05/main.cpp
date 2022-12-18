@@ -191,7 +191,6 @@ DriverEntry(
 	);
 	KdPrint(("Func %s/%s returns 0x%lX\n", __FUNCTION__, "IoCreateSymbolicLink", nt));
 	if (!NT_SUCCESS(nt)) {
-		OnDrvUnload(pDriverObject);
 		goto fail;
 	}
 
