@@ -22,4 +22,10 @@ public:
 	BOOL CloseDevice(VOID) const;
 	BOOL Read(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const;
 	BOOL Write(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const;
+	BOOL SendCtlCode(
+		DWORD dwCtlCode,
+		LPVOID lpInBuf, DWORD dwInBufSize,
+		LPVOID lpOutBuf, DWORD dwOutBufSize,
+		LPDWORD pdwBytesRet
+	) const;
 };

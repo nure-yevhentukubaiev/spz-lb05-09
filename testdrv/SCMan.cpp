@@ -124,3 +124,19 @@ BOOL SCMan::Write(LPVOID lpBuf, ULONG ulSize, PULONG pulActualSize) const
 		NULL
 	);
 }
+
+BOOL SCMan::SendCtlCode(
+	DWORD dwCtlCode,
+	LPVOID lpInBuf, DWORD dwInBufSize,
+	LPVOID lpOutBuf, DWORD dwOutBufSize,
+	LPDWORD pdwBytesRet
+) const
+{
+	return DeviceIoControl(
+		this->hDevice, dwCtlCode,
+		lpInBuf, dwInBufSize,
+		lpOutBuf, dwInBufSize,
+		pdwBytesRet,
+		NULL
+	);
+}
