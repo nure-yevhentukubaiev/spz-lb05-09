@@ -21,13 +21,13 @@
 #define IDC_OPEN_DEVICE                 1006
 #define IDC_CLOSE_DEVICE                1007
 #define IDC_EDIT_SERVICENAME            1008
-#define IDC_STATIC2                     1009
 #define IDC_EDIT_SYMBOLICLINKNAME       1010
 #define IDC_READ                        1011
-#define IDC_READ2                       1012
 #define IDC_WRITE                       1012
+#define IDC_CTL_CODE                    1013
 #define IDC_FILEPICKER                  1017
 #define IDC_STATIC                      -1
+#define IDC_STATIC2                     129
 
 // Next default values for new objects
 // 
@@ -36,7 +36,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1010
+#define _APS_NEXT_CONTROL_VALUE         1014
 #define _APS_NEXT_SYMED_VALUE           110
 #endif
 #endif

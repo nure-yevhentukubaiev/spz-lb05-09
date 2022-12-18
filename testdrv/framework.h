@@ -9,5 +9,6 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
+#include <winioctl.h>
 #include <commdlg.h>
 #include <CommCtrl.h>
