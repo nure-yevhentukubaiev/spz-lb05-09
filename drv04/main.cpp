@@ -114,7 +114,7 @@ DispatchDriver(
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
 	KdPrint((
-		"Func %s/irp_mj_%d returns %lX, information %lX\n",
+		"Func %s/irp_mj_%d returns 0x%lX, information 0x%lX\n",
 		__FUNCTION__, pIoStack->MajorFunction, pIrp->IoStatus.Status, pIrp->IoStatus.Information
 	));
 	return pIrp->IoStatus.Status;
@@ -130,7 +130,7 @@ OnDrvUnload(
 	for (ULONG i = 0; i < ARRAYSIZE(aMyDevices); ++i) {
 		if (aMyDevices[i].uniszSymlink.Length != 0) {
 			NTSTATUS nt = IoDeleteSymbolicLink(&aMyDevices[i].uniszSymlink);
-			KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoDeleteSymbolicLink", nt));
+			KdPrint(("Func %s/%s returns 0x%lX\n", __FUNCTION__, "IoDeleteSymbolicLink", nt));
 		}
 	}
 
@@ -186,7 +186,7 @@ DriverEntry(
 			42069+i, aMyDevices[i].uFlags, FALSE,
 			&aMyDevices[i].pDeviceObject
 		);
-		KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoCreateDevice", nt));
+		KdPrint(("Func %s/%s returns 0x%lX\n", __FUNCTION__, "IoCreateDevice", nt));
 		if (!NT_SUCCESS(nt)) {
 			OnDrvUnload(pDriverObject);
 			goto fail;
@@ -199,7 +199,7 @@ DriverEntry(
 			&aMyDevices[i].uniszSymlink,
 			&aMyDevices[i].uniszDevice
 		);
-		KdPrint(("Func %s/%s returns %lX\n", __FUNCTION__, "IoCreateSymbolicLink", nt));
+		KdPrint(("Func %s/%s returns 0x%lX\n", __FUNCTION__, "IoCreateSymbolicLink", nt));
 		if (!NT_SUCCESS(nt)) {
 			OnDrvUnload(pDriverObject);
 			goto fail;
@@ -212,6 +212,6 @@ DriverEntry(
 	}
 
 fail:
-	KdPrint(("Func %s returns %lX\n", __FUNCTION__, nt));
+	KdPrint(("Func %s returns 0x%lX\n", __FUNCTION__, nt));
 	return nt;
 }
