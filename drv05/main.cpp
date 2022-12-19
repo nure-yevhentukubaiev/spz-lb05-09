@@ -2,10 +2,19 @@
 #define DRV04_BUFFER_LENGTH 16U
 
 #define FILE_DEVICE_IOCTL 0x00008301
-#define IOCTL_MY_NEITHER CTL_CODE(FILE_DEVICE_IOCTL, 0x820, METHOD_NEITHER, FILE_ANY_ACCESS)
-#define IOCTL_MY_BUFFERED CTL_CODE(FILE_DEVICE_IOCTL, 0x821, METHOD_BUFFERED, FILE_ANY_ACCESS)
-#define IOCTL_MY_IN_DIRECT CTL_CODE(FILE_DEVICE_IOCTL, 0x822, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
-#define IOCTL_MY_OUT_DIRECT CTL_CODE(FILE_DEVICE_IOCTL, 0x823, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
+#define DRV05_BASE_CTL_FUNC 0x820
+#define IOCTL_MY_NEITHER CTL_CODE( \
+	FILE_DEVICE_IOCTL, DRV05_BASE_CTL_FUNC+0, METHOD_NEITHER, FILE_ANY_ACCESS \
+)
+#define IOCTL_MY_BUFFERED CTL_CODE( \
+	FILE_DEVICE_IOCTL, DRV05_BASE_CTL_FUNC+1, METHOD_BUFFERED, FILE_ANY_ACCESS \
+)
+#define IOCTL_MY_IN_DIRECT CTL_CODE( \
+	FILE_DEVICE_IOCTL, DRV05_BASE_CTL_FUNC+2, METHOD_IN_DIRECT, FILE_ANY_ACCESS \
+)
+#define IOCTL_MY_OUT_DIRECT CTL_CODE( \
+	FILE_DEVICE_IOCTL, DRV05_BASE_CTL_FUNC+3, METHOD_OUT_DIRECT, FILE_ANY_ACCESS \
+)
 
 static PCWSTR pszDevice = L"\\Device\\drv05";
 UNICODE_STRING uniszDevice;
@@ -33,7 +42,6 @@ DispatchDriver(
 	PIRP pIrp
 )
 {
-	PDEVICE_EXTENSION pDeviceExtension;
 	PIO_STACK_LOCATION pIoStack;
 	PVOID pInBuf = NULL;
 	PVOID pOutBuf = NULL;
@@ -42,7 +50,6 @@ DispatchDriver(
 
 	KdPrint(("Func %s\n", __FUNCTION__));
 	pIoStack = IoGetCurrentIrpStackLocation(pIrp);
-	pDeviceExtension = (PDEVICE_EXTENSION)pDeviceObject->DeviceExtension;
 
 	switch (pIoStack->MajorFunction) {
 	case IRP_MJ_CREATE:
@@ -107,11 +114,12 @@ DispatchDriver(
 	}
 
 	pIrp->IoStatus.Status = STATUS_SUCCESS;
+	pIrp->IoStatus.Information = min(ulInLength, ulOutLength);
 	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 
 	KdPrint((
-		"drv05: InB = %08lX, len = %lX, OutB = %08lX, len = %lX\n",
-		(ULONG)pInBuf, ulInLength, (ULONG)pOutBuf, ulOutLength
+		"drv05: InB = %p, len = %lX, OutB = %p, len = %lX\n",
+		pInBuf, ulInLength, pOutBuf, ulOutLength
 	));
 	KdPrint((
 		"Func %s/irp_mj_%d returns 0x%lX, device code 0x%lX, information 0x%lX\n",
@@ -156,7 +164,6 @@ DriverEntry(
 )
 {
 	NTSTATUS nt = STATUS_SUCCESS;
-	PDEVICE_OBJECT pDeviceObject;
 	CONST UCHAR iIrpCodes[] = {
 		IRP_MJ_CREATE,
 		IRP_MJ_CLOSE,
@@ -175,7 +182,7 @@ DriverEntry(
 		pDriverObject,
 		sizeof(DEVICE_EXTENSION), &uniszDevice,
 		44000, 0, FALSE,
-		&pDeviceObject
+		&pDriverObject->DeviceObject
 	);
 	KdPrint(("Func %s/%s returns 0x%lX\n", __FUNCTION__, "IoCreateDevice", nt));
 	if (!NT_SUCCESS(nt)) {
