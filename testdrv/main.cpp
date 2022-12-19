@@ -201,13 +201,14 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			LPTSTR lpszLogEntry =
 				(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
 			lstrcpyA(lpInBuf, "FEDCBA9");
-			AppendLogEntry(_T("SentCtlCode: "));
+			
 			for (
 				DWORD dwCtlCode = DRV05_BASE_CTL_FUNC;
 				dwCtlCode < DRV05_BASE_CTL_FUNC + 8;
 				dwCtlCode++
 			) {
-				if (scman.SendCtlCode(
+				AppendLogEntry(_T("SentCtlCode: "));
+				if (!scman.SendCtlCode(
 					dwCtlCode,
 					lpInBuf, TESTDRV_BYTES_TO_READ,
 					lpOutBuf, TESTDRV_BYTES_TO_WRITE,
@@ -221,8 +222,8 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				lpOutBuf[dwBytesToShow] = '\0';
 				_stprintf_s(
 					lpszLogEntry, CCHBUF_SMALL,
-					_T("%d bytes handled, first %d bytes: %hs\r\n"),
-					dwActualSize, dwBytesToShow, lpOutBuf
+					_T("%d bytes handled, device code 0x%lX, first %d bytes: %hs\r\n"),
+					dwActualSize, dwCtlCode, dwBytesToShow, lpOutBuf
 				);
 				AppendLogEntry(lpszLogEntry);
 			}

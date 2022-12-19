@@ -50,8 +50,9 @@ DispatchDriver(
 
 	UNREFERENCED_PARAMETER(pDeviceObject);
 
-	KdPrint(("Func %s\n", __FUNCTION__));
+	
 	pIoStack = IoGetCurrentIrpStackLocation(pIrp);
+	KdPrint(("Func %s/irp_mj_%d\n", __FUNCTION__, pIoStack->MajorFunction));
 
 	switch (pIoStack->MajorFunction) {
 	case IRP_MJ_CREATE:
@@ -112,14 +113,15 @@ DispatchDriver(
 				break;
 			default:
 				pIrp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-				return STATUS_NOT_IMPLEMENTED;
+				return pIrp->IoStatus.Status;
 				break;
 			}
 			break;
 		}
+		break;
 	default:
 		pIrp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
-		return STATUS_NOT_IMPLEMENTED;
+		return pIrp->IoStatus.Status;
 		break;
 	}
 
