@@ -7,9 +7,9 @@
 #define IOCTL_MY_IN_DIRECT CTL_CODE(FILE_DEVICE_IOCTL, 0x822, METHOD_IN_DIRECT, FILE_ANY_ACCESS)
 #define IOCTL_MY_OUT_DIRECT CTL_CODE(FILE_DEVICE_IOCTL, 0x823, METHOD_OUT_DIRECT, FILE_ANY_ACCESS)
 
-static PCWSTR pszDevice = L"\\Device\\drv04-bufferio";
+static PCWSTR pszDevice = L"\\Device\\drv05";
 UNICODE_STRING uniszDevice;
-static PCWSTR pszSymlink = L"\\DosDevices\\drv04-bufferio-symlink";
+static PCWSTR pszSymlink = L"\\DosDevices\\drv05";
 UNICODE_STRING uniszSymlink;
 
 typedef struct _DEVICE_EXTENSION {
