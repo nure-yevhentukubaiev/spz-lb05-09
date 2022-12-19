@@ -2,7 +2,7 @@
 #define DRV04_BUFFER_LENGTH 16U
 
 #define FILE_DEVICE_IOCTL 0x00008301
-#define DRV05_BASE_CTL_FUNC 0x820
+#define DRV05_BASE_CTL_FUNC 0x800
 #define IOCTL_MY_NEITHER CTL_CODE( \
 	FILE_DEVICE_IOCTL, DRV05_BASE_CTL_FUNC+0, METHOD_NEITHER, FILE_ANY_ACCESS \
 )
@@ -47,6 +47,8 @@ DispatchDriver(
 	PVOID pOutBuf = NULL;
 	ULONG ulInLength = 0;
 	ULONG ulOutLength = 0;
+
+	UNREFERENCED_PARAMETER(pDeviceObject);
 
 	KdPrint(("Func %s\n", __FUNCTION__));
 	pIoStack = IoGetCurrentIrpStackLocation(pIrp);
@@ -115,7 +117,7 @@ DispatchDriver(
 
 	pIrp->IoStatus.Status = STATUS_SUCCESS;
 	pIrp->IoStatus.Information = min(ulInLength, ulOutLength);
-	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
+	
 
 	KdPrint((
 		"drv05: InB = %p, len = %lX, OutB = %p, len = %lX\n",
@@ -129,6 +131,8 @@ DispatchDriver(
 		pIoStack->Parameters.DeviceIoControl.IoControlCode,
 		pIrp->IoStatus.Information
 	));
+
+	IoCompleteRequest(pIrp, IO_NO_INCREMENT);
 	return pIrp->IoStatus.Status;
 }
 
@@ -181,7 +185,7 @@ DriverEntry(
 	nt = IoCreateDevice(
 		pDriverObject,
 		sizeof(DEVICE_EXTENSION), &uniszDevice,
-		44000, 0, FALSE,
+		FILE_DEVICE_IOCTL, 0, FALSE,
 		&pDriverObject->DeviceObject
 	);
 	KdPrint(("Func %s/%s returns 0x%lX\n", __FUNCTION__, "IoCreateDevice", nt));
