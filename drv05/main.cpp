@@ -65,6 +65,7 @@ DispatchDriver(
 			ulInLength = pIoStack->Parameters.DeviceIoControl.InputBufferLength;
 			pOutBuf = pIrp->AssociatedIrp.SystemBuffer;
 			ulOutLength = pIoStack->Parameters.DeviceIoControl.OutputBufferLength;
+			break;
 		case IOCTL_MY_IN_DIRECT:
 			pInBuf = pIrp->AssociatedIrp.SystemBuffer;
 			ulInLength = pIoStack->Parameters.DeviceIoControl.InputBufferLength;
@@ -90,6 +91,7 @@ DispatchDriver(
 				ulInLength = pIoStack->Parameters.DeviceIoControl.InputBufferLength;
 				pOutBuf = pIrp->AssociatedIrp.SystemBuffer;
 				ulOutLength = pIoStack->Parameters.DeviceIoControl.OutputBufferLength;
+				break;
 			case METHOD_IN_DIRECT:
 				pInBuf = pIrp->AssociatedIrp.SystemBuffer;
 				ulInLength = pIoStack->Parameters.DeviceIoControl.InputBufferLength;
@@ -108,10 +110,16 @@ DispatchDriver(
 				pOutBuf = pIrp->UserBuffer;
 				ulOutLength = pIoStack->Parameters.DeviceIoControl.OutputBufferLength;
 				break;
+			default:
+				pIrp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+				return STATUS_NOT_IMPLEMENTED;
+				break;
 			}
 			break;
 		}
 	default:
+		pIrp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+		return STATUS_NOT_IMPLEMENTED;
 		break;
 	}
 
