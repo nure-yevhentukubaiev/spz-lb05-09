@@ -156,6 +156,7 @@ DriverEntry(
 )
 {
 	NTSTATUS nt = STATUS_SUCCESS;
+	PDEVICE_OBJECT pDeviceObject;
 	CONST UCHAR iIrpCodes[] = {
 		IRP_MJ_CREATE,
 		IRP_MJ_CLOSE,
@@ -174,7 +175,7 @@ DriverEntry(
 		pDriverObject,
 		sizeof(DEVICE_EXTENSION), &uniszDevice,
 		44000, 0, FALSE,
-		NULL
+		&pDeviceObject
 	);
 	KdPrint(("Func %s/%s returns 0x%lX\n", __FUNCTION__, "IoCreateDevice", nt));
 	if (!NT_SUCCESS(nt)) {
