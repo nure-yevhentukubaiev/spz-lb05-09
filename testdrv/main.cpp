@@ -195,10 +195,12 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 			DWORD dwActualSize = 0;
 			LPSTR lpInBuf =
-				(LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (TESTDRV_BYTES_TO_WRITE + 1));
+				(LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (TESTDRV_BYTES_TO_READ));
 			LPSTR lpOutBuf =
-				(LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (TESTDRV_BYTES_TO_READ + 1));
-			lstrcpyA(lpInBuf, "FEDCBA9876543210");
+				(LPSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(CHAR) * (TESTDRV_BYTES_TO_WRITE));
+			LPTSTR lpszLogEntry =
+				(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
+			lstrcpyA(lpInBuf, "FEDCBA9");
 			AppendLogEntry(_T("SentCtlCode: "));
 			for (
 				DWORD dwCtlCode = DRV05_BASE_CTL_FUNC;
@@ -207,28 +209,23 @@ LRESULT CALLBACK DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			) {
 				if (scman.SendCtlCode(
 					dwCtlCode,
-					lpInBuf, TESTDRV_BYTES_TO_WRITE,
-					lpOutBuf, TESTDRV_BYTES_TO_READ,
+					lpInBuf, TESTDRV_BYTES_TO_READ,
+					lpOutBuf, TESTDRV_BYTES_TO_WRITE,
 					&dwActualSize
 				)) {
 					PrintLastError();
-					LocalFree(lpInBuf);
-					LocalFree(lpOutBuf);
 					break;
 				}
+
+				DWORD dwBytesToShow = min(dwActualSize, SHOW_BYTES);
+				lpOutBuf[dwBytesToShow] = '\0';
+				_stprintf_s(
+					lpszLogEntry, CCHBUF_SMALL,
+					_T("%d bytes handled, first %d bytes: %hs\r\n"),
+					dwActualSize, dwBytesToShow, lpOutBuf
+				);
+				AppendLogEntry(lpszLogEntry);
 			}
-
-			LPTSTR lpszLogEntry =
-				(LPTSTR)LocalAlloc(LMEM_ZEROINIT, sizeof(TCHAR) * CCHBUF_SMALL);
-
-			DWORD dwBytesToShow = min(dwActualSize, SHOW_BYTES);
-			lpOutBuf[dwBytesToShow] = '\0';
-			_stprintf_s(
-				lpszLogEntry, CCHBUF_SMALL,
-				_T("%d bytes handled, first %d bytes: %hs\r\n"),
-				dwActualSize, dwBytesToShow, lpOutBuf
-			);
-			AppendLogEntry(lpszLogEntry);
 			LocalFree(lpszLogEntry);
 			LocalFree(lpInBuf);
 			LocalFree(lpOutBuf);
